@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Announcement System</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #232f3e; text-align: center; }
+        .card { background: white; padding: 24px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { color: #ff9900; margin-top: 0; }
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        button { background: #ff9900; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; width: 100%; }
+        button:hover { background: #e88900; }
+        .message { padding: 12px; border-radius: 6px; margin-top: 12px; display: none; font-size: 14px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Event Announcement System</h1>
+
+    <div class="card">
+        <h2>Subscribe to Events</h2>
+        <p>Enter your email to get notified when new events are created.</p>
+        <input type="email" id="subEmail" placeholder="your@email.com" />
+        <button onclick="subscribe()">Subscribe</button>
+        <div class="message" id="subMsg"></div>
+    </div>
+
+    <div class="card">
+        <h2>Create New Event</h2>
+        <p>Post a new event — all subscribers will be emailed instantly.</p>
+        <input type="text" id="eventName" placeholder="Event name" />
+        <textarea id="eventDesc" rows="3" placeholder="Event description"></textarea>
+        <input type="date" id="eventDate" />
+        <button onclick="createEvent()">Create Event</button>
+        <div class="message" id="eventMsg"></div>
+    </div>
+
+    <script>
+        const API_URL = "http://event-system-saptin-2025.s3-website-us-east-1.amazonaws.com";
+
+        async function subscribe() {
+            const email = document.getElementById('subEmail').value;
+            const msg = document.getElementById('subMsg');
+            if (!email) { showMsg(msg, 'Please enter your email!', false); return; }
+            try {
+                const res = await fetch(API_URL + '/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                showMsg(msg, data.message || 'Check your inbox to confirm!', true);
+            } catch (err) {
+                showMsg(msg, 'Something went wrong. Try again.', false);
+            }
+        }
+
+        async function createEvent() {
+            const name = document.getElementById('eventName').value;
+            const description = document.getElementById('eventDesc').value;
+            const date = document.getElementById('eventDate').value;
+            const msg = document.getElementById('eventMsg');
+            if (!name) { showMsg(msg, 'Please enter an event name!', false); return; }
+            try {
+                const res = await fetch(API_URL + '/create-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description, date })
+                });
+                const data = await res.json();
+                showMsg(msg, data.message || 'Event created!', true);
+            } catch (err) {
+                showMsg(msg, 'Something went wrong. Try again.', false);
+            }
+        }
+
+        function showMsg(el, text, success) {
+            el.textContent = text;
+            el.className = 'message ' + (success ? 'success' : 'error');
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
